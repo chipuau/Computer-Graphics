@@ -1,0 +1,304 @@
+<html>
+
+    <head>
+        <script src="libs/three.js"></script>
+        <script src="libs/keyboard.js"></script>
+    </head>
+
+    <body>
+
+        <script>
+
+            //Megan Chipman
+            
+            //Declare and Initialize Variables
+            var renderer; 
+            var scene; 
+            var camera; 
+            var ball; 
+            var paddle1, paddle2;
+            var pEdges1, pEdges2;
+            var xDir = 0.08; 
+            var yDir = 0.08; 
+            var pong, walls, walls2, applause, song;
+            
+            //Create initiating function: 
+            function init(){
+
+                //Create the Scene:
+                scene = new THREE.Scene(); 
+
+                //Call functions to add objects to the scene: 
+                initRenderer(); 
+                initCamera(); 
+                addSpotLight();
+                addPlayBottom();
+                addSideBoards();   
+                addPaddles(); 
+                addBall(); 
+                addSound();
+            
+                document.body.appendChild(renderer.domElement); 
+                
+                render(); 
+            }
+
+            //InitRenderer: Initializes the Renderer
+            function initRenderer(){
+                renderer = new THREE.WebGLRenderer(); 
+                renderer.setClearColor(0x000000, 1.0,); 
+                renderer.setSize(window.innerWidth, window.innerHeight); 
+                renderer.shadowMapEnabled = true; 
+            }
+
+            //InitCamera: Initializes and places the camera
+            function initCamera(){
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000); 
+                camera.position.x = 0; 
+                camera.position.y = -24; 
+                camera.position.z = 12; 
+                camera.lookAt(scene.position); 
+                scene.add(camera);
+            }
+
+            //AddSpotLight: Initializes and places the spotlight
+            function addSpotLight(){
+                var spotLight, spotLight2; 
+
+                spotLight = new THREE.SpotLight(0xffffff); 
+                spotLight.position.set(0, -1, 15); 
+                spotLight.shadowCameraNear = 20; 
+                spotLight.shadowCameraFar = 50; 
+                spotLight.castShadow = true; 
+                scene.add(spotLight); 
+
+            }
+
+            //AddPlayBottom: Places the flat bottom of the playing field
+            function addPlayBottom(){
+                var planeGeometry; 
+                var planeMaterial; 
+                var plane; 
+
+                planeGeometry = new THREE.PlaneGeometry(14, 24, 14, 14); 
+                planeMaterial = new THREE.MeshLambertMaterial({color: 0x4BD121}); 
+                plane = new THREE.Mesh(planeGeometry, planeMaterial); 
+                scene.add(plane);
+            }
+
+            //AddSideBoards: Places the side panels for the playing field
+            function addSideBoards(){
+                var leftWall, rightWall;  
+                var wallMaterial; 
+                var wall1, wall2; 
+                var edges1, edges2;
+
+                //Create the left wall and its edges and add it to the scene:
+                leftWall = new THREE.BoxGeometry (1, 24, 3); 
+                wallMaterial = new THREE.MeshLambertMaterial({color: 'yellow'}); 
+               
+                wall1 = new THREE.Mesh(leftWall, wallMaterial); 
+                wall1.position.x = -7; 
+                wall1.position.z = 1.5;
+                wall1.castShadow = true; 
+                scene.add(wall1); 
+
+                edges1 = new THREE.EdgesHelper(wall1, 0x555555); 
+                edges1.position.x = -7;
+                edges1.position.z = 1.5;
+                scene.add(edges1); 
+
+                //Create the right wall and its edges and add it to the scene:
+                rightWall = new THREE.BoxGeometry(1, 24, 3); 
+                wall2 = new THREE.Mesh(rightWall, wallMaterial); 
+                wall2.position.x = 7;
+                wall2.position.z = 1.5; 
+                wall2.castShadow = true;
+                scene.add(wall2); 
+
+                edges2 = new THREE.EdgesHelper(wall2, 0x555555);
+                edges2.position.x = 7;
+                edges2.position.z = 1.5; 
+                scene.add(edges2); 
+            }
+
+            //AddPaddles: Places the paddles onto the playing field
+            function addPaddles(){
+                var opponentPaddle; 
+                var playerPaddle; 
+                var paddleMaterial1, paddleMaterial2; 
+            
+                //Create the opponent's paddle and add it to the scene: 
+                opponentPaddle = new THREE.BoxGeometry(2.5, 0.5, 1.5); 
+                paddleMaterial1 = new THREE.MeshLambertMaterial ({color:'red'});
+               
+                paddle1 = new THREE.Mesh(opponentPaddle, paddleMaterial1); 
+                paddle1.position.y = 12.35; 
+                paddle1.position.z = 0.5;
+                paddle1.castShadow = true; 
+                scene.add(paddle1); 
+
+                pEdges1 = new THREE.EdgesHelper(paddle1, 0x000000); 
+                pEdges1.position.y = 12.35;
+                pEdges1.position.z = 0.5;
+                scene.add(pEdges1); 
+
+                //Create the player paddle and add it to the scene: 
+                playerPaddle = new THREE.BoxGeometry(2.5, 0.5, 1); 
+                paddleMaterial2 = new THREE.MeshLambertMaterial ({color: 'blue'});  
+
+                paddle2 = new THREE.Mesh(playerPaddle, paddleMaterial2); 
+                paddle2.position.y = -12.35; 
+                paddle2.position.z = 1;
+                paddle2.castShadow = true; 
+                scene.add(paddle2); 
+
+                pEdges2 = new THREE.EdgesHelper(paddle2, 0x000000);
+                pEdges2.position.y = -12.35; 
+                pEdges2.position.z = 1;
+                scene.add(pEdges2); 
+            }
+
+            //AddBall: Creates the ball and places it on the play field
+            function addBall(){
+                var ballSphere; 
+                var ballMaterial;
+
+                ballSphere = new THREE.SphereGeometry(0.5); 
+                ballMaterial = new THREE.MeshLambertMaterial({color:'aliceblue'}); 
+                ball = new THREE.Mesh(ballSphere, ballMaterial); 
+                ball.position.z = 0.5;
+                ball.castShadow = true; 
+                scene.add(ball);  
+            }
+
+            //AddSound: Loads and initializes sound variables for in-game use
+            function addSound(){
+                pong = new Audio("audio/pop.wav");  
+                walls = new Audio("audio/clack.mp3"); 
+                walls2 = new Audio("audio/clack.mp3"); 
+                applause = new Audio("audio/clapping.wav");  
+            }
+
+
+            //Renders the scene and adds Motion
+            function render(){
+
+                requestAnimationFrame(render); 
+                renderer.render(scene, camera); 
+
+                //Give the ball motion:
+                ball.position.x += xDir; 
+                ball.position.y += yDir;
+
+                //Use the Left and Right Arrow Keys to move the player paddle:
+                if(Key.isDown(Key.LEFTARROW) && paddle2.position.x > -5){
+                    paddle2.position.x -= 0.05; 
+                    pEdges2.position.x = paddle2.position.x;
+                }
+
+                else if (Key.isDown(Key.RIGHTARROW) && paddle2.position.x < 5){
+                    paddle2.position.x += 0.05;
+                    pEdges2.position.x = paddle2.position.x;
+                }
+
+                //If the ball hits the wall, play the wall sound and reverse direction
+                if (ball.position.x < -6 ){
+                    walls.play(); 
+                    xDir = -xDir; 
+                }
+
+                if (ball.position.x > 6){
+                    walls2.play();
+                    xDir = -xDir; 
+                }
+
+                //If the ball hits a paddle, play the pong noise and change the y direction.
+                if (ball.position.y < -11.35 && yDir < 0){
+                    yDir = -yDir; 
+                
+                    if (Math.abs(paddle2.position.x - ball.position.x) <= 1.75){
+
+                        pong.play();
+
+                        //Depending on where the ball hits the paddle, figure out which x direction the ball moves in.
+                        if (paddle2.position.x > ball.position.x){
+                            xDir = - ( 0.02 + xDir);
+                        }
+
+                        else{
+                            xDir = 0.02 + xDir; 
+                        }
+                    }
+
+                    //If the paddle misses the ball, then reset everything.
+                    else {
+                        applause.play();
+                        ball.position.x = ball.position.y = 0; 
+                        paddle1.position.x = 0;
+                        paddle1.position.y = 12.35;
+                        paddle1.position.z = 0.5;
+                        paddle2.position.x = 0;
+                        paddle2.position.y = -12.35;
+                        paddle2.position.z = 1;
+                        
+                        xDir = 0.08;
+                        yDir = 0.08;
+                    }
+                }
+
+                //If the ball hits a paddle, play the pong noise and change the y direction.
+                if (ball.position.y > 11.35 && yDir > 0){
+                    yDir = -yDir; 
+                   
+
+                    if (Math.abs(paddle1.position.x - ball.position.x) <= 1.75){
+
+                         pong.play();
+                        
+                        //Depending on where the ball hits the paddle, figure out which x direction the ball moves in.
+                        if (paddle1.position.x > ball.position.x){
+                        xDir = - ( 0.02 + xDir);
+                        }
+
+                        else{
+                            xDir = 0.02 + xDir; 
+                        }
+                    }
+
+                    //If the paddle misses the ball, then reset everything.
+                    else {
+                        applause.play();
+                        ball.position.x = ball.position.y = 0;
+                        paddle1.position.x = 0;
+                        paddle1.position.y = 12.35;
+                        paddle1.position.z = 0.5;
+                        paddle2.position.x = 0;
+                        paddle2.position.y = -12.35;
+                        paddle2.position.z = 1;
+                        xDir = 0.08;
+                        yDir = 0.08;
+                    }
+                }
+                
+                //Prevents the paddles from moving beyond the playing field:
+                if (xDir > 0 && paddle1.position.x < 5.2){
+                    paddle1.position.x += 0.05;
+                }
+
+                if (xDir < 0 && paddle1.position.x > -5.2){
+                    paddle1.position.x -= 0.05;
+                }
+
+                //Makes sure that the paddle edges follow their objects: 
+                pEdges1.position.x = paddle1.position.x; 
+                pEdges2.position.x = paddle2.position.x;
+            }
+
+            window.onload = init; 
+
+        </script>
+    
+    </body>
+
+</html>
